@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>龙之谷 · 永远支持</title>
+    <style>
+        /* ===== 全局重置 & 背景 ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            min-height: 100vh;
+            background: radial-gradient(ellipse at 50% 30%, #1a2a4a, #0b0f1a);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* ===== 星空背景 ===== */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                radial-gradient(2px 2px at 20% 30%, rgba(255, 255, 255, 0.6), transparent),
+                radial-gradient(2px 2px at 40% 70%, rgba(255, 255, 255, 0.5), transparent),
+                radial-gradient(3px 3px at 60% 20%, rgba(255, 255, 255, 0.7), transparent),
+                radial-gradient(2px 2px at 80% 60%, rgba(255, 255, 255, 0.4), transparent),
+                radial-gradient(2px 2px at 10% 80%, rgba(255, 255, 255, 0.5), transparent),
+                radial-gradient(3px 3px at 70% 90%, rgba(255, 255, 255, 0.6), transparent),
+                radial-gradient(2px 2px at 90% 10%, rgba(255, 255, 255, 0.3), transparent),
+                radial-gradient(2px 2px at 50% 50%, rgba(255, 255, 255, 0.4), transparent);
+            background-size: 100% 100%;
+            pointer-events: none;
+            z-index: 0;
+            animation: twinkle 4s ease-in-out infinite alternate;
+        }
+
+        @keyframes twinkle {
+            0%,
+            100% {
+                opacity: 0.6;
+            }
+            50% {
+                opacity: 1;
+            }
+        }
+
+        /* ===== 主对话框 ===== */
+        .dialog {
+            position: relative;
+            z-index: 10;
+            width: 720px;
+            max-width: 92vw;
+            height: 520px;
+            max-height: 85vh;
+            background: rgba(18, 28, 48, 0.75);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border: 2px solid rgba(255, 215, 100, 0.45);
+            border-radius: 36px;
+            box-shadow:
+                0 30px 80px rgba(0, 0, 0, 0.7),
+                inset 0 1px 0 rgba(255, 215, 100, 0.15),
+                0 0 60px rgba(255, 200, 80, 0.08);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+
+        .dialog.hidden {
+            opacity: 0;
+            transform: scale(0.92) translateY(20px);
+            pointer-events: none;
+        }
+
+        /* ===== 顶部装饰条 ===== */
+        .dialog-header {
+            padding: 20px 30px 10px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 215, 100, 0.12);
+            flex-shrink: 0;
+        }
+
+        .dialog-header .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 26px;
+            font-weight: 700;
+            color: #f5d78e;
+            text-shadow: 0 0 20px rgba(255, 215, 100, 0.2);
+            letter-spacing: 2px;
+        }
+
+        .dialog-header .logo span {
+            font-size: 32px;
+        }
+
+        .dialog-header .dragon-icon {
+            font-size: 28px;
+            opacity: 0.7;
+            animation: floatDragon 3s ease-in-out infinite;
+        }
+
+        @keyframes floatDragon {
+            0%,
+            100% {
+                transform: translateY(0) rotate(-2deg);
+            }
+            50% {
+                transform: translateY(-6px) rotate(2deg);
+            }
+        }
+
+        /* ===== 内容区域（问题 + B按钮） ===== */
+        .dialog-body {
+            flex: 1;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px 40px 10px 40px;
+            min-height: 0;
+        }
+
+        .question-text {
+            font-size: 28px;
+            font-weight: 600;
+            color: #f0e8d8;
+            text-align: center;
+            line-height: 1.5;
+            text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+            letter-spacing: 1px;
+            pointer-events: none;
+            z-index: 2;
+            margin-bottom: 10px;
+        }
+
+        .question-text .highlight {
+            color: #f5d78e;
+            background: linear-gradient(135deg, #f5d78e, #f0c060);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* ===== B按钮（浮动逃跑） ===== */
+        .btn-no {
+            position: absolute;
+            z-index: 20;
+            padding: 14px 32px;
+            font-size: 20px;
+            font-weight: 700;
+            border: none;
+            border-radius: 60px;
+            cursor: pointer;
+            background: linear-gradient(145deg, #3a4a6a, #2a3a5a);
+            color: #c0d0e8;
+            box-shadow:
+                0 6px 24px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            transition: left 0.35s cubic-bezier(0.34, 1.4, 0.64, 1),
+                top 0.35s cubic-bezier(0.34, 1.4, 0.64, 1),
+                background 0.3s ease,
+                box-shadow 0.3s ease,
+                transform 0.25s ease,
+                width 0.2s ease;
+            white-space: nowrap;
+            letter-spacing: 1px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            will-change: left, top;
+            min-width: 130px;
+            text-align: center;
+        }
+
+        .btn-no:hover {
+            background: linear-gradient(145deg, #4a5a7a, #3a4a6a);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 30px rgba(100, 150, 255, 0.1);
+        }
+
+        .btn-no:active {
+            transform: scale(0.92);
+        }
+
+        /* 逃跑时的特殊闪光 */
+        .btn-no.fleeing {
+            animation: fleePulse 0.3s ease;
+        }
+
+        @keyframes fleePulse {
+            0% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(255, 215, 100, 0.3);
+            }
+            50% {
+                transform: scale(1.08);
+                box-shadow: 0 0 40px rgba(255, 215, 100, 0.3);
+            }
+            100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(255, 215, 100, 0);
+            }
+        }
+
+        /* ===== A按钮（底部固定） ===== */
+        .btn-yes {
+            position: relative;
+            z-index: 15;
+            padding: 16px 48px;
+            font-size: 22px;
+            font-weight: 700;
+            border: none;
+            border-radius: 60px;
+            cursor: pointer;
+            background: linear-gradient(145deg, #f5d78e, #e8b84a);
+            color: #1a1a2e;
+            box-shadow:
+                0 8px 32px rgba(255, 215, 100, 0.25),
+                inset 0 1px 0 rgba(255, 255, 255, 0.5);
+            transition: all 0.25s ease;
+            letter-spacing: 2px;
+            flex-shrink: 0;
+            border: 1px solid rgba(255, 215, 100, 0.3);
+            margin-bottom: 6px;
+        }
+
+        .btn-yes:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 12px 40px rgba(255, 215, 100, 0.35),
+                inset 0 1px 0 rgba(255, 255, 255, 0.6);
+        }
+
+        .btn-yes:active {
+            transform: scale(0.96);
+            box-shadow: 0 4px 16px rgba(255, 215, 100, 0.2);
+        }
+
+        /* ===== 底部按钮容器 ===== */
+        .dialog-footer {
+            flex-shrink: 0;
+            padding: 8px 40px 28px 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-top: 1px solid rgba(255, 215, 100, 0.06);
+            position: relative;
+            z-index: 5;
+        }
+
+        /* ===== 提示小标签 ===== */
+        .hint-tag {
+            position: absolute;
+            z-index: 25;
+            font-size: 16px;
+            font-weight: 600;
+            color: #f5d78e;
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(6px);
+            padding: 6px 18px;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 215, 100, 0.2);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            transform: translateY(8px);
+            white-space: nowrap;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .hint-tag.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ===== 感谢界面 ===== */
+        .thankyou {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            background: radial-gradient(ellipse at 50% 40%, #1a2a4a, #070a12);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.8s ease;
+            padding: 30px;
+        }
+
+        .thankyou.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .thankyou-content {
+            text-align: center;
+            max-width: 620px;
+            animation: thankyouIn 1s ease forwards;
+            transform: scale(0.9) translateY(30px);
+            opacity: 0;
+        }
+
+        .thankyou.active .thankyou-content {
+            animation: thankyouIn 0.9s cubic-bezier(0.34, 1.4, 0.64, 1) forwards;
+        }
+
+        @keyframes thankyouIn {
+            0% {
+                transform: scale(0.9) translateY(30px);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(1) translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .thankyou-content .big-icon {
+            font-size: 72px;
+            display: block;
+            margin-bottom: 16px;
+            animation: bounceIcon 2s ease-in-out infinite;
+        }
+
+        @keyframes bounceIcon {
+            0%,
+            100% {
+                transform: translateY(0) scale(1);
+            }
+            50% {
+                transform: translateY(-12px) scale(1.05);
+            }
+        }
+
+        .thankyou-content h1 {
+            font-size: 44px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #f5d78e, #f0c060, #f5d78e);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: shimmerGold 3s ease-in-out infinite;
+            margin-bottom: 16px;
+            letter-spacing: 4px;
+        }
+
+        @keyframes shimmerGold {
+            0%,
+            100% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+        }
+
+        .thankyou-content p {
+            font-size: 24px;
+            color: #d0d8e8;
+            line-height: 1.6;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .thankyou-content .sub-dragon {
+            font-size: 36px;
+            display: block;
+            margin-top: 20px;
+            opacity: 0.6;
+            animation: floatDragon 4s ease-in-out infinite;
+        }
+
+        /* ===== 金色粒子装饰 ===== */
+        .particles {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: radial-gradient(circle, #f5d78e, transparent);
+            border-radius: 50%;
+            opacity: 0;
+            animation: particleFloat 8s ease-in-out infinite;
+        }
+
+        .particle:nth-child(1) {
+            left: 10%;
+            top: 20%;
+            animation-delay: 0s;
+            width: 8px;
+            height: 8px;
+        }
+        .particle:nth-child(2) {
+            left: 85%;
+            top: 15%;
+            animation-delay: 1.5s;
+            width: 5px;
+            height: 5px;
+        }
+        .particle:nth-child(3) {
+            left: 25%;
+            top: 80%;
+            animation-delay: 3s;
+            width: 7px;
+            height: 7px;
+        }
+        .particle:nth-child(4) {
+            left: 70%;
+            top: 75%;
+            animation-delay: 0.8s;
+            width: 4px;
+            height: 4px;
+        }
+        .particle:nth-child(5) {
+            left: 50%;
+            top: 10%;
+            animation-delay: 2.2s;
+            width: 9px;
+            height: 9px;
+        }
+        .particle:nth-child(6) {
+            left: 5%;
+            top: 50%;
+            animation-delay: 4s;
+            width: 5px;
+            height: 5px;
+        }
+        .particle:nth-child(7) {
+            left: 92%;
+            top: 45%;
+            animation-delay: 1s;
+            width: 6px;
+            height: 6px;
+        }
+        .particle:nth-child(8) {
+            left: 45%;
+            top: 90%;
+            animation-delay: 3.5s;
+            width: 7px;
+            height: 7px;
+        }
+
+        @keyframes particleFloat {
+            0% {
+                opacity: 0;
+                transform: translateY(40px) scale(0.5);
+            }
+            20% {
+                opacity: 0.7;
+            }
+            80% {
+                opacity: 0.7;
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-120px) scale(1.2);
+            }
+        }
+
+        /* ===== 响应式 ===== */
+        @media (max-width: 768px) {
+            .dialog {
+                width: 94vw;
+                height: 480px;
+                max-height: 90vh;
+                border-radius: 28px;
+            }
+
+            .dialog-header {
+                padding: 14px 20px 8px 20px;
+            }
+            .dialog-header .logo {
+                font-size: 20px;
+                gap: 8px;
+            }
+            .dialog-header .logo span {
+                font-size: 26px;
+            }
+            .dialog-header .dragon-icon {
+                font-size: 22px;
+            }
+
+            .dialog-body {
+                padding: 14px 20px 6px 20px;
+            }
+
+            .question-text {
+                font-size: 20px;
+                line-height: 1.4;
+                padding: 0 4px;
+            }
+
+            .btn-no {
+                padding: 10px 22px;
+                font-size: 16px;
+                min-width: 100px;
+                border-radius: 40px;
+            }
+
+            .btn-yes {
+                padding: 12px 32px;
+                font-size: 18px;
+                border-radius: 40px;
+            }
+
+            .dialog-footer {
+                padding: 6px 20px 20px 20px;
+            }
+
+            .thankyou-content h1 {
+                font-size: 30px;
+            }
+            .thankyou-content p {
+                font-size: 18px;
+            }
+            .thankyou-content .big-icon {
+                font-size: 52px;
+            }
+
+            .hint-tag {
+                font-size: 13px;
+                padding: 4px 14px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .dialog {
+                height: 420px;
+                border-radius: 20px;
+            }
+            .dialog-header .logo {
+                font-size: 17px;
+            }
+            .question-text {
+                font-size: 17px;
+            }
+            .btn-no {
+                padding: 8px 16px;
+                font-size: 14px;
+                min-width: 80px;
+            }
+            .btn-yes {
+                padding: 10px 24px;
+                font-size: 16px;
+            }
+            .thankyou-content h1 {
+                font-size: 24px;
+            }
+            .thankyou-content p {
+                font-size: 16px;
+            }
+            .thankyou-content .big-icon {
+                font-size: 40px;
+            }
+        }
+
+        /* ===== 滚动条隐藏 ===== */
+        ::-webkit-scrollbar {
+            width: 0;
+            height: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== 装饰粒子 ===== -->
+    <div class="particles">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+
+    <!-- ===== 主对话框 ===== -->
+    <div class="dialog" id="dialog">
+        <!-- 头部 -->
+        <div class="dialog-header">
+            <div class="logo">
+                <span>🐉</span> 龙之谷
+            </div>
+            <div class="dragon-icon">⚔️</div>
+        </div>
+
+        <!-- 内容区 -->
+        <div class="dialog-body" id="dialogBody">
+            <div class="question-text">
+                你愿意 <span class="highlight">永远支持</span> 龙之谷吗？
+            </div>
+
+            <!-- B按钮 - 浮动逃跑 -->
+            <button class="btn-no" id="btnNo">我再看看 👀</button>
+        </div>
+
+        <!-- 底部 -->
+        <div class="dialog-footer">
+            <button class="btn-yes" id="btnYes">✨ 当然了</button>
+        </div>
+
+        <!-- 调皮提示 -->
+        <div class="hint-tag" id="hintTag">😜 抓不到我~</div>
+    </div>
+
+    <!-- ===== 感谢界面 ===== -->
+    <div class="thankyou" id="thankyou">
+        <div class="thankyou-content">
+            <span class="big-icon">🐲</span>
+            <h1>❤️ 感谢支持！</h1>
+            <p>感谢大家对龙之谷的支持，<br />小龙永远不会跑路呀 🎉</p>
+            <span class="sub-dragon">✦ 龙之谷 · 永恒 ✦</span>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+
+            // ===== DOM 引用 =====
+            const dialog = document.getElementById('dialog');
+            const btnYes = document.getElementById('btnYes');
+            const btnNo = document.getElementById('btnNo');
+            const dialogBody = document.getElementById('dialogBody');
+            const thankyou = document.getElementById('thankyou');
+            const hintTag = document.getElementById('hintTag');
+
+            // ===== 状态 =====
+            let isFleeing = false;
+            let fleeCount = 0;
+            const COOLDOWN = 280; // 毫秒
+            let lastFleeTime = 0;
+
+            // ===== 逃跑文字池 =====
+            const fleeTexts = [
+                '我再看看 👀',
+                '抓不到我~ 😜',
+                '嘿嘿 😏',
+                '来呀来呀~ ✨',
+                '你点不到~ 🎯',
+                '略略略 😛',
+                '就不点~ 💨',
+                '追不上我~ 🏃'
+            ];
+
+            // ===== 工具：随机整数 =====
+            function rand(min, max) {
+                return Math.floor(Math.random() * (max - min + 1)) + min;
+            }
+
+            // ===== 工具：随机选择数组元素 =====
+            function randomPick(arr) {
+                return arr[Math.floor(Math.random() * arr.length)];
+            }
+
+            // ===== 计算 B 按钮的合法移动范围 =====
+            function getMoveBounds() {
+                const rect = dialogBody.getBoundingClientRect();
+                const btnRect = btnNo.getBoundingClientRect();
+
+                // 对话框内容区域的尺寸（相对于 dialogBody）
+                const containerWidth = dialogBody.clientWidth;
+                const containerHeight = dialogBody.clientHeight;
+
+                // 按钮尺寸
+                const btnWidth = btnNo.offsetWidth || 130;
+                const btnHeight = btnNo.offsetHeight || 52;
+
+                // 安全边距
+                const pad = 12;
+
+                // 计算最大 left / top（确保按钮完全在容器内）
+                const maxLeft = containerWidth - btnWidth - pad;
+                const maxTop = containerHeight - btnHeight - pad;
+
+                // 最小位置
+                const minLeft = pad;
+                const minTop = pad;
+
+                return {
+                    minLeft,
+                    maxLeft,
+                    minTop,
+                    maxTop,
+                    containerWidth,
+                    containerHeight,
+                    btnWidth,
+                    btnHeight
+                };
+            }
+
+            // ===== 让 B 按钮逃跑 =====
+            function flee() {
+                const now = Date.now();
+                if (now - lastFleeTime < COOLDOWN) return;
+                lastFleeTime = now;
+
+                // 获取边界
+                const bounds = getMoveBounds();
+                if (bounds.maxLeft < bounds.minLeft || bounds.maxTop < bounds.minTop) {
+                    // 容器太小，无法安全放置按钮，强行居中
+                    btnNo.style.left = '50%';
+                    btnNo.style.top = '50%';
+                    btnNo.style.transform = 'translate(-50%, -50%)';
+                    return;
+                }
+
+                // 生成随机位置
+                let left = rand(bounds.minLeft, bounds.maxLeft);
+                let top = rand(bounds.minTop, bounds.maxTop);
+
+                // 保证与当前位置有足够距离（防止原地抖动）
+                const curLeft = parseFloat(btnNo.style.left) || 0;
+                const curTop = parseFloat(btnNo.style.top) || 0;
+                const minDist = 60;
+
+                let attempts = 0;
+                while (attempts < 20) {
+                    const dx = left - curLeft;
+                    const dy = top - curTop;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist >= minDist) break;
+                    left = rand(bounds.minLeft, bounds.maxLeft);
+                    top = rand(bounds.minTop, bounds.maxTop);
+                    attempts++;
+                }
+
+                // 应用位置
+                btnNo.style.left = left + 'px';
+                btnNo.style.top = top + 'px';
+                btnNo.style.transform = 'none';
+
+                // 随机改变文字
+                const newText = randomPick(fleeTexts);
+                btnNo.textContent = newText;
+
+                // 逃跑动画
+                btnNo.classList.remove('fleeing');
+                void btnNo.offsetWidth; // 触发回流
+                btnNo.classList.add('fleeing');
+
+                // 计数
+                fleeCount++;
+
+                // 显示调皮提示
+                if (fleeCount >= 3 && fleeCount % 2 === 1) {
+                    const hints = [
+                        '😜 抓不到我~',
+                        '🤣 你追我呀~',
+                        '😏 嘿嘿，点不到~',
+                        '💨 咻~ 又跑了~',
+                        '✨ 我还会回来的~'
+                    ];
+                    hintTag.textContent = randomPick(hints);
+                    hintTag.classList.add('show');
+                    clearTimeout(hintTag._hideTimer);
+                    hintTag._hideTimer = setTimeout(() => {
+                        hintTag.classList.remove('show');
+                    }, 1200);
+                }
+
+                // 让按钮获得焦点（但不会导致点击）
+                // 什么都不做
+            }
+
+            // ===== 初始化 B 按钮位置 =====
+            function initBtnPosition() {
+                // 先让按钮在容器内居中，然后随机偏移
+                const bounds = getMoveBounds();
+                if (bounds.maxLeft > bounds.minLeft && bounds.maxTop > bounds.minTop) {
+                    const left = rand(bounds.minLeft, bounds.maxLeft);
+                    const top = rand(bounds.minTop, bounds.maxTop);
+                    btnNo.style.left = left + 'px';
+                    btnNo.style.top = top + 'px';
+                    btnNo.style.transform = 'none';
+                } else {
+                    btnNo.style.left = '50%';
+                    btnNo.style.top = '50%';
+                    btnNo.style.transform = 'translate(-50%, -50%)';
+                }
+                btnNo.textContent = '我再看看 👀';
+            }
+
+            // ===== 窗口大小变化时重新校准 =====
+            let resizeTimer = null;
+
+            function handleResize() {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(() => {
+                    // 确保按钮在合法范围内
+                    const bounds = getMoveBounds();
+                    let left = parseFloat(btnNo.style.left) || 0;
+                    let top = parseFloat(btnNo.style.top) || 0;
+
+                    // 如果按钮超出边界，拉回来
+                    if (left < bounds.minLeft) left = bounds.minLeft;
+                    if (left > bounds.maxLeft) left = bounds.maxLeft;
+                    if (top < bounds.minTop) top = bounds.minTop;
+                    if (top > bounds.maxTop) top = bounds.maxTop;
+
+                    btnNo.style.left = left + 'px';
+                    btnNo.style.top = top + 'px';
+                }, 200);
+            }
+
+            // ===== B 按钮事件绑定 =====
+            // 鼠标移上 → 逃跑
+            btnNo.addEventListener('mouseenter', function(e) {
+                flee();
+            });
+
+            // 点击 → 逃跑
+            btnNo.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                flee();
+                // 额外反馈：闪烁
+                btnNo.style.transition = 'all 0.1s ease';
+                btnNo.style.transform = 'scale(0.9)';
+                setTimeout(() => {
+                    btnNo.style.transform = 'scale(1)';
+                    setTimeout(() => {
+                        btnNo.style.transition =
+                            'left 0.35s cubic-bezier(0.34, 1.4, 0.64, 1), top 0.35s cubic-bezier(0.34, 1.4, 0.64, 1), background 0.3s ease, box-shadow 0.3s ease, transform 0.25s ease, width 0.2s ease';
+                    }, 50);
+                }, 100);
+                return false;
+            });
+
+            // 触屏设备支持
+            btnNo.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                flee();
+            }, { passive: false });
+
+            // ===== A 按钮点击 → 显示感谢 =====
+            btnYes.addEventListener('click', function() {
+                // 隐藏对话框
+                dialog.classList.add('hidden');
+
+                // 延迟显示感谢界面（让对话框消失动画先播放）
+                setTimeout(() => {
+                    thankyou.classList.add('active');
+                    // 隐藏 hint
+                    hintTag.classList.remove('show');
+                }, 450);
+            });
+
+            // ===== 点击感谢界面任意处关闭？不关闭，保持显示 =====
+            // 但可以加一个小功能：点击感谢界面重新显示对话框（彩蛋）
+            thankyou.addEventListener('click', function(e) {
+                // 如果点击的是背景，可以重新开始（但为了体验，不强制）
+                // 这里不做任何事，保持感谢界面
+                // 但双击可以重新显示对话框（隐藏彩蛋）
+            });
+
+            // ===== 双击感谢界面重置（彩蛋） =====
+            thankyou.addEventListener('dblclick', function() {
+                thankyou.classList.remove('active');
+                dialog.classList.remove('hidden');
+                // 重置 B 按钮位置
+                setTimeout(() => {
+                    initBtnPosition();
+                }, 300);
+                fleeCount = 0;
+                hintTag.classList.remove('show');
+            });
+
+            // ===== 监听窗口变化 =====
+            window.addEventListener('resize', handleResize);
+
+            // ===== 初始化 =====
+            // 等待 DOM 完全渲染后初始化位置
+            setTimeout(() => {
+                initBtnPosition();
+            }, 100);
+
+            // 在加载完成后也重新校准一次
+            window.addEventListener('load', function() {
+                setTimeout(initBtnPosition, 200);
+            });
+
+            // ===== 键盘快捷键：Enter 或 Space 触发 A 按钮 =====
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    if (!dialog.classList.contains('hidden')) {
+                        e.preventDefault();
+                        btnYes.click();
+                    }
+                }
+                // ESC 关闭 hint
+                if (e.key === 'Escape') {
+                    hintTag.classList.remove('show');
+                }
+            });
+
+            // ===== 额外：当鼠标在页面中快速移动时，如果靠近B按钮，也触发逃跑？ =====
+            // 这是增强整蛊效果：鼠标靠近 B 按钮 80px 内就触发逃跑
+            // 但为了不过度干扰，只在按钮可见且未被点击时生效
+            let proximityTimer = null;
+
+            document.addEventListener('mousemove', function(e) {
+                if (dialog.classList.contains('hidden')) return;
+                if (isFleeing) return;
+
+                const btnRect = btnNo.getBoundingClientRect();
+                const cx = btnRect.left + btnRect.width / 2;
+                const cy = btnRect.top + btnRect.height / 2;
+                const dx = e.clientX - cx;
+                const dy = e.clientY - cy;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                // 如果鼠标在按钮 70px 范围内，触发逃跑（但不触发得太频繁）
+                if (dist < 70 && dist > 0) {
+                    clearTimeout(proximityTimer);
+                    proximityTimer = setTimeout(() => {
+                        flee();
+                    }, 80);
+                }
+            });
+
+            // ===== 控制台提示 =====
+            console.log('%c🐉 龙之谷 · 永远支持', 'font-size:24px; font-weight:bold; color:#f5d78e;');
+            console.log('%c💡 提示：选项 B 是永远点不到的 ~', 'font-size:14px; color:#aab8d0;');
+            console.log('%c✨ 双击感谢界面可以重置哦！', 'font-size:14px; color:#aab8d0;');
+
+            console.log('🎮 试试按 Enter 或 Space 快速选择 "当然了"');
+        })();
+    </script>
+
+</body>
+</html>
