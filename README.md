@@ -1,2 +1,0 @@
-# slimefun
-slimefun resourcepack
